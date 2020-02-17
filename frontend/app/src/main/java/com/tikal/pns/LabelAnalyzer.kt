@@ -1,14 +1,13 @@
 package com.tikal.pns
 
-import android.graphics.*
-import android.media.Image
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
-import java.io.ByteArrayOutputStream
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -35,8 +34,6 @@ class LabelAnalyzer: ImageAnalysis.Analyzer {
         // Don't process new images until label submitted to backend
         if (!isBusy.compareAndSet(false, true))
             return
-
-        imageProxy.image
 
         // Get image planes
         val y = imageProxy.planes[0]
@@ -70,10 +67,13 @@ class LabelAnalyzer: ImageAnalysis.Analyzer {
             .addOnSuccessListener { labels ->
                 // Objects recognized at certain confidence
                 if (labels.size > 0) {
+
+                    val thumb = BitmapFactory.decodeByteArray(data,0,data.size)
+
                     labels.forEach {
                         // If passes the confidence threshold - report on to the backend
                         if (it.confidence > MLKT_CONFIDENCE_THRESHOLD)
-                            reportObject(it.text, imageProxy.image?.toThumbnail())
+                            reportObject(it.text, thumb)
                     }
                 }
                 isBusy.set(false)
@@ -101,39 +101,4 @@ class LabelAnalyzer: ImageAnalysis.Analyzer {
         Log.i("PnS", "object $label")
     }
 
-}
-
-
-/**
- * Creates a bitmap from this image.
- */
-fun Image.toBitmap(): Bitmap {
-    val yBuffer = planes[0].buffer // Y
-    val uBuffer = planes[1].buffer // U
-    val vBuffer = planes[2].buffer // V
-
-    val ySize = yBuffer.remaining()
-    val uSize = uBuffer.remaining()
-    val vSize = vBuffer.remaining()
-
-    val nv21 = ByteArray(ySize + uSize + vSize)
-
-    //U and V are swapped
-    yBuffer.get(nv21, 0, ySize)
-    vBuffer.get(nv21, ySize, vSize)
-    uBuffer.get(nv21, ySize + vSize, uSize)
-
-    val yuvImage = YuvImage(nv21, ImageFormat.NV21, this.width, this.height, null)
-    val out = ByteArrayOutputStream()
-    yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 50, out)
-    val imageBytes = out.toByteArray()
-    return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-}
-
-/**
- * Creates a thumbnail from this image.
- */
-fun Image.toThumbnail(): Bitmap {
-    val bitmap = this.toBitmap()
-    return Bitmap.createScaledBitmap(bitmap, THUMB_WIDTH, THUMB_HEIGHT, false)
 }
