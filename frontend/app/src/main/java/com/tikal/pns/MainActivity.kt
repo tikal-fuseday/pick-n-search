@@ -4,8 +4,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.graphics.drawable.BitmapDrawable
 import android.media.MediaActionSound
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -24,6 +24,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.firebase.FirebaseApp
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import com.tikal.pns.network.ApiClient
+import com.tikal.pns.network.ApiService
+import com.tikal.pns.network.GeneralResponse
+import com.tikal.pns.network.Request
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.ByteArrayOutputStream
 
 
@@ -37,6 +45,8 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
     private lateinit var btnShoot: ImageView
     private lateinit var reDetected: View
     private lateinit var tvDetectedLabel: TextView
+    private lateinit var service: ApiService
+    private lateinit var storageRef: StorageReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,29 +78,11 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
             updateTransform()
         }
 
+        service = ApiClient.create()
+        val storage = FirebaseStorage.getInstance()
 
-
-
-
-//        val body = Request("fff")
-//        val service = ApiClient.create()
-//        val call = service.sendToServer(body)
-//
-//        call.enqueue(object : Callback<GeneralResponse> {
-//            override fun onResponse(
-//                call: Call<GeneralResponse>,
-//                response: Response<GeneralResponse>
-//            ) {
-//                if (response.code() == 200) {
-//                    val weatherResponse = response.body()!!
-//                    println("viewFinder = ${viewFinder}")
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<GeneralResponse>, t: Throwable) {
-//                println("viewFinder = ${viewFinder}")
-//            }
-//        })
+        // Create a storage reference from our app
+         storageRef = storage.reference
     }
 
     /**
@@ -200,34 +192,7 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
 
     override fun onObjectDetected(labels: Map<String, Float>, thumb: Bitmap?) {
 
-        val storage = FirebaseStorage.getInstance()
-
-        // Create a storage reference from our app
-        val storageRef = storage.reference
-
-        // Create a reference to "mountains.jpg"
-        val mountainsRef = storageRef.child("mountains.jpg")
-
-        // Create a reference to 'images/mountains.jpg'
-        val mountainImagesRef = storageRef.child("images/mountains.jpg")
-
-        // While the file names are the same, the references point to different files
-        mountainsRef.name == mountainImagesRef.name // true
-        mountainsRef.path == mountainImagesRef.path // false
-
-        val baos = ByteArrayOutputStream()
-        thumb?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-
-        val data = baos.toByteArray()
-
-        var uploadTask = mountainsRef.putBytes(data)
-        uploadTask.addOnFailureListener {
-            println("viewFinder = ${viewFinder}")
-        }.addOnSuccessListener {
-            println("viewFinder = ${viewFinder}")
-        }
-
-
+        uploadImageToStorage(thumb)
 
         runOnUiThread {
             Log.i("PnS", "object detected")
@@ -251,5 +216,53 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
                 tvDetectedLabel.text = "searching ...."
             }, 1000)
         }
+    }
+
+    private fun uploadImageToStorage(thumb: Bitmap?) {
+        val mountainsRef = storageRef.child(System.currentTimeMillis().toString() + ".jpg")
+
+        val baos = ByteArrayOutputStream()
+        thumb?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+
+        val data = baos.toByteArray()
+
+        var uploadTask = mountainsRef.putBytes(data)
+        uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    throw it
+                }
+            }
+            mountainsRef.downloadUrl
+        }.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val downloadUri = task.result
+
+                sendUrlToServer(downloadUri)
+            } else {
+                println("viewFinder = ${viewFinder}")
+            }
+        }
+    }
+
+    private fun sendUrlToServer(downloadUri: Uri?) {
+        val body = Request(downloadUri.toString())
+        val call = service.sendToServer(body)
+
+        call.enqueue(object : Callback<GeneralResponse> {
+            override fun onResponse(
+                call: Call<GeneralResponse>,
+                response: Response<GeneralResponse>
+            ) {
+                if (response.code() == 200) {
+                    val weatherResponse = response.body()!!
+                    println("viewFinder = ${viewFinder}")
+                }
+            }
+
+            override fun onFailure(call: Call<GeneralResponse>, t: Throwable) {
+                println("viewFinder = ${viewFinder}")
+            }
+        })
     }
 }
