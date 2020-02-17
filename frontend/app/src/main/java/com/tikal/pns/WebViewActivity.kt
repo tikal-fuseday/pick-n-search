@@ -16,6 +16,6 @@ class WebViewActivity : AppCompatActivity() {
         webView = findViewById(R.id.webView)
 
         webView.getSettings().setJavaScriptEnabled(true)
-        webView.loadUrl("https://practical-tesla-193296.netlify.com/")
+        webView.loadUrl("https://cranky-visvesvaraya-5dd279.netlify.com/")
     }
 }
