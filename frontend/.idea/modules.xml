@@ -4,8 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Pick-n-Search.iml" filepath="$PROJECT_DIR$/Pick-n-Search.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/frontend-Pick-n-Search.iml" filepath="$PROJECT_DIR$/frontend-Pick-n-Search.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/frontend-app.iml" filepath="$PROJECT_DIR$/app/frontend-app.iml" />
     </modules>
   </component>
 </project>

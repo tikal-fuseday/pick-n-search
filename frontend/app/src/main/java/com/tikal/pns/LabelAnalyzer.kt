@@ -22,8 +22,9 @@ private const val THUMB_WIDTH = 640
 private const val THUMB_HEIGHT = 640
 
 
-class LabelAnalyzer: ImageAnalysis.Analyzer {
+class LabelAnalyzer(val listener: LabelAnalysisListener) : ImageAnalysis.Analyzer {
 
+    // If we busy processing the previous image
     private val isBusy = AtomicBoolean(false)
 
     /**
@@ -68,13 +69,20 @@ class LabelAnalyzer: ImageAnalysis.Analyzer {
                 // Objects recognized at certain confidence
                 if (labels.size > 0) {
 
-                    val thumb = BitmapFactory.decodeByteArray(data,0,data.size)
+                    // Create a thumbnail for this image
+                    var thumb = BitmapFactory.decodeByteArray(data, 0, data.size)
+//                    thumb = Bitmap.createScaledBitmap(thumb, THUMB_WIDTH, THUMB_HEIGHT, false)
 
+                    // Map labels to confidence values
+                    val map = HashMap<String, Float>()
                     labels.forEach {
                         // If passes the confidence threshold - report on to the backend
                         if (it.confidence > MLKT_CONFIDENCE_THRESHOLD)
-                            reportObject(it.text, thumb)
+                            map[it.text] = it.confidence
                     }
+
+                    if (map.size > 0)
+                        listener.onObjectDetected(map, thumb)
                 }
                 isBusy.set(false)
             }

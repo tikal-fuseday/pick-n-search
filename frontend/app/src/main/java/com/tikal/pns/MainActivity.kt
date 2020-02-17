@@ -2,6 +2,7 @@ package com.tikal.pns
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.media.MediaActionSound
 import android.os.Bundle
@@ -11,27 +12,28 @@ import android.util.Log
 import android.util.Rational
 import android.view.Surface
 import android.view.TextureView
+import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.firebase.FirebaseApp
-import java.util.concurrent.Executors
 
 
 // Permissions for camera
 private const val REQUEST_CODE_PERMISSIONS = 10
 private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), LabelAnalysisListener {
 
-    private val executor = Executors.newSingleThreadExecutor()
     private lateinit var viewFinder: TextureView
     private lateinit var btnShoot: ImageView
-
+    private lateinit var reDetected: View
+    private lateinit var tvDetectedLabel: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,8 +42,13 @@ class MainActivity : AppCompatActivity() {
 
         // Setup controls
         viewFinder = findViewById(R.id.tvViewFinder)
-        btnShoot = findViewById(R.id.btnShoot)
-        btnShoot.setOnClickListener { shoot() }
+        reDetected = findViewById(R.id.reDetected)
+        reDetected.visibility = View.INVISIBLE
+        tvDetectedLabel= findViewById(R.id.tvDetectedLabel)
+
+//        btnShoot = findViewById(R.id.btnShoot)
+
+//        btnShoot.setOnClickListener { shoot() }
 
         // Request camera permissions
         if (allPermissionsGranted()) {
@@ -109,12 +116,12 @@ class MainActivity : AppCompatActivity() {
 
         // Create MLKIT analysis use case
         val analyzerUseCase = ImageAnalysis(analyzerConfig).apply {
-            analyzer = LabelAnalyzer()
+            analyzer = LabelAnalyzer(this@MainActivity)
         }
 
         // Build the viewfinder use case
         val previewConfig = PreviewConfig.Builder().apply {
-            setTargetAspectRatio(Rational(1,1))
+            setTargetAspectRatio(Rational(16, 9))
         }.build()
         val preview = Preview(previewConfig)
 
@@ -159,5 +166,35 @@ class MainActivity : AppCompatActivity() {
         val sound = MediaActionSound()
         sound.play(MediaActionSound.SHUTTER_CLICK)
         Log.i("PnS", "shooting frame")
+    }
+
+    //
+    // METHODS
+    //
+    // API from LabelAnalysisListener
+
+    override fun onObjectDetected(labels: Map<String, Float>, thumb: Bitmap?) {
+        runOnUiThread {
+            Log.i("PnS", "object detected")
+            var max = 0f
+            var label = "searching ...."
+            labels.forEach {
+                if (it.value > max) {
+                    max = it.value
+                    label = it.key
+                }
+                Log.i("PnS", "object: ${it.key}, confidence: ${it.value}")
+            }
+
+            // Update UI
+            reDetected.visibility = View.VISIBLE
+            tvDetectedLabel.text = label
+
+            // Remove after a while
+            reDetected.postDelayed({
+                reDetected.visibility = View.INVISIBLE
+                tvDetectedLabel.text = "searching ...."
+            }, 1000)
+        }
     }
 }
