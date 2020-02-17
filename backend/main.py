@@ -16,7 +16,7 @@ trust_certs='./ca-certificates.crt'
 
 token='eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJmdXplMjBnOC10aWthbGstY29tLWNsaWVudC01ZTRhNmY4ZThiOTBjIn0.G8JrP2Hl9zqVW1Ihx_6ekkPzOHcKjb-XwsOjUMaueLyZhnRbhNEONsO4nzuU00lROHSC3aU1C_2qiIQUsPNmpxUCze5aQBzcdWaMkYa7R5bowZ_onstof6n-2G1Hs8CudwWhfEvQzngUef55kdAYa6AQQgEP3jQB1mNlxhBQ6Tz6yN0tzIXCSwr2TbMxvGMuGS4Iv4eqICqZcrg0UWa1EPkwW1lblK4_bxAB96Yu4CuO0-DJVg09ovvsUcH6tfXonkWPVMkgbtN3H0zwLzTpubCjE6nY7bOkvKM7nRk9OvOXmG-7FPT4lizgp0d1S9VRfr7woB6YqHyb_SwEmeS1Nw'
 
-topic = 'fuze20g8-tikalk-com/local-useast1-gcp/test-topic'
+topic = 'fuze20g8-tikalk-com/local-useast1-gcp/latest-image-data'
 
 MAX_MSG_SIZE = 5000
 
