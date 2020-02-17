@@ -104,3 +104,34 @@ def publish(request):
     
     publish_image_payload(payload)
     return '{"status": "OK"}'
+
+def delete(request):
+    """
+        delete() : Delete a pulsar message
+    """
+    try:
+        # Check for ID in URL query
+        msg_id = request.args.get('id')
+        delete_msg(msg_id)
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
+def delete_msg(msg_id):
+    client = pulsar.Client(service_url,
+                            authentication=pulsar.AuthenticationToken(token),
+                            tls_trust_certs_file_path=trust_certs)
+
+    reader = client.create_reader(topic, pulsar.MessageId.earliest)
+    consumer = client.subscribe(topic, 'my-subscription')
+
+
+    while reader.has_message_available():
+        msg = reader.read_next(MAX_MSG_SIZE)
+        print(f"received: {msg_id}, current: {str(msg.message_id())}")
+        if str(msg.message_id()) == msg_id:
+            print(f"{msg_id} deleted! ")
+            consumer.acknowledge(msg)
+            break
+
+    client.close()
