@@ -4,6 +4,10 @@
 
     pick-n-search/backend$ gcloud functions deploy delete --runtime python37 --trigger-http --allow-unauthenticated
 
+## read logs
+
+    gcloud functions logs read publish
+
 ## test
 
 ### publish
