@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.graphics.drawable.BitmapDrawable
 import android.media.MediaActionSound
 import android.os.Bundle
 import android.os.Handler
@@ -22,6 +23,8 @@ import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.firebase.FirebaseApp
+import com.google.firebase.storage.FirebaseStorage
+import java.io.ByteArrayOutputStream
 
 
 // Permissions for camera
@@ -44,7 +47,7 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
         viewFinder = findViewById(R.id.tvViewFinder)
         reDetected = findViewById(R.id.reDetected)
         reDetected.visibility = View.INVISIBLE
-        tvDetectedLabel= findViewById(R.id.tvDetectedLabel)
+        tvDetectedLabel = findViewById(R.id.tvDetectedLabel)
 
 //        btnShoot = findViewById(R.id.btnShoot)
 
@@ -66,6 +69,28 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
         }
 
 
+
+
+
+//        val body = Request("fff")
+//        val service = ApiClient.create()
+//        val call = service.sendToServer(body)
+//
+//        call.enqueue(object : Callback<GeneralResponse> {
+//            override fun onResponse(
+//                call: Call<GeneralResponse>,
+//                response: Response<GeneralResponse>
+//            ) {
+//                if (response.code() == 200) {
+//                    val weatherResponse = response.body()!!
+//                    println("viewFinder = ${viewFinder}")
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<GeneralResponse>, t: Throwable) {
+//                println("viewFinder = ${viewFinder}")
+//            }
+//        })
     }
 
     /**
@@ -174,6 +199,36 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
     // API from LabelAnalysisListener
 
     override fun onObjectDetected(labels: Map<String, Float>, thumb: Bitmap?) {
+
+        val storage = FirebaseStorage.getInstance()
+
+        // Create a storage reference from our app
+        val storageRef = storage.reference
+
+        // Create a reference to "mountains.jpg"
+        val mountainsRef = storageRef.child("mountains.jpg")
+
+        // Create a reference to 'images/mountains.jpg'
+        val mountainImagesRef = storageRef.child("images/mountains.jpg")
+
+        // While the file names are the same, the references point to different files
+        mountainsRef.name == mountainImagesRef.name // true
+        mountainsRef.path == mountainImagesRef.path // false
+
+        val baos = ByteArrayOutputStream()
+        thumb?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+
+        val data = baos.toByteArray()
+
+        var uploadTask = mountainsRef.putBytes(data)
+        uploadTask.addOnFailureListener {
+            println("viewFinder = ${viewFinder}")
+        }.addOnSuccessListener {
+            println("viewFinder = ${viewFinder}")
+        }
+
+
+
         runOnUiThread {
             Log.i("PnS", "object detected")
             var max = 0f

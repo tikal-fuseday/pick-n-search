@@ -49,6 +49,12 @@ dependencies {
     // Firebase
     implementation 'com.google.firebase:firebase-ml-vision:24.0.0'
     implementation 'com.google.firebase:firebase-ml-vision-image-label-model:19.0.0'
+    implementation 'com.google.firebase:firebase-storage:19.1.1'
+
+    // Retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.6.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.6.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.5.0'
 }
 
 apply plugin: 'com.google.gms.google-services'
