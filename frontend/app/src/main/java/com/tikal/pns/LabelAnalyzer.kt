@@ -1,14 +1,16 @@
 package com.tikal.pns
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Log
+import android.graphics.*
+import android.media.Image
+import android.view.TextureView
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.atomic.AtomicBoolean
+
 
 /**
  * Threshold for MLKT labels confidence.
@@ -19,10 +21,10 @@ private const val MLKT_CONFIDENCE_THRESHOLD = 0.8
  * Thumbnail dimensions.
  */
 private const val THUMB_WIDTH = 640
-private const val THUMB_HEIGHT = 640
+private const val THUMB_HEIGHT = 768
 
 
-class LabelAnalyzer(val listener: LabelAnalysisListener) : ImageAnalysis.Analyzer {
+class LabelAnalyzer(private val view: TextureView, private val listener: LabelAnalysisListener) : ImageAnalysis.Analyzer {
 
     // If we busy processing the previous image
     private val isBusy = AtomicBoolean(false)
@@ -53,6 +55,9 @@ class LabelAnalyzer(val listener: LabelAnalysisListener) : ImageAnalysis.Analyze
         u.buffer.get(data, Yb, Ub)
         v.buffer.get(data, Yb + Ub, Vb)
 
+        // Create a thumbnail
+        val thumb = scaleBitmap(view.bitmap)
+
         val metadata = FirebaseVisionImageMetadata.Builder()
             .setFormat(FirebaseVisionImageMetadata.IMAGE_FORMAT_YV12)
             .setHeight(imageProxy.height)
@@ -68,10 +73,6 @@ class LabelAnalyzer(val listener: LabelAnalysisListener) : ImageAnalysis.Analyze
             .addOnSuccessListener { labels ->
                 // Objects recognized at certain confidence
                 if (labels.size > 0) {
-
-                    // Create a thumbnail for this image
-                    var thumb = BitmapFactory.decodeByteArray(data, 0, data.size)
-//                    thumb = Bitmap.createScaledBitmap(thumb, THUMB_WIDTH, THUMB_HEIGHT, false)
 
                     // Map labels to confidence values
                     val map = HashMap<String, Float>()
@@ -105,8 +106,46 @@ class LabelAnalyzer(val listener: LabelAnalysisListener) : ImageAnalysis.Analyze
         return result
     }
 
-    private fun reportObject(label: String, thumb: Bitmap?) {
-        Log.i("PnS", "object $label")
+    private fun scaleBitmap(bm: Bitmap): Bitmap? {
+        var width = bm.width
+        var height = bm.height
+        if (width > height) { // landscape
+            val ratio = width.toFloat() / THUMB_WIDTH
+            width = THUMB_WIDTH
+            height = (height / ratio).toInt()
+        } else if (height > width) { // portrait
+            val ratio = height.toFloat() / THUMB_HEIGHT
+            height = THUMB_HEIGHT
+            width = (width / ratio).toInt()
+        } else { // square
+            height = THUMB_WIDTH
+            width = THUMB_HEIGHT
+        }
+        return Bitmap.createScaledBitmap(bm, width, height, true)
     }
-
 }
+
+fun Image.toThumbnail(): Bitmap? {
+    val yBuffer = planes[0].buffer // Y
+    val uBuffer = planes[1].buffer // U
+    val vBuffer = planes[2].buffer // V
+
+    val ySize = yBuffer.remaining()
+    val uSize = uBuffer.remaining()
+    val vSize = vBuffer.remaining()
+
+    val nv21 = ByteArray(ySize + uSize + vSize)
+
+    //U and V are swapped
+    yBuffer.get(nv21, 0, ySize)
+    vBuffer.get(nv21, ySize, vSize)
+    uBuffer.get(nv21, ySize + vSize, uSize)
+
+    val yuvImage = YuvImage(nv21, ImageFormat.NV21, this.width, this.height, null)
+    val out = ByteArrayOutputStream()
+    yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 50, out)
+    val imageBytes = out.toByteArray()
+    return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+//    return Bitmap.createScaledBitmap(bitmap, THUMB_WIDTH, THUMB_HEIGHT, false)
+}
+
