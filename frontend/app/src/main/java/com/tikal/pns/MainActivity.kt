@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
 
         // Create MLKIT analysis use case
         val analyzerUseCase = ImageAnalysis(analyzerConfig).apply {
-            analyzer = LabelAnalyzer(this@MainActivity)
+            analyzer = LabelAnalyzer(viewFinder, this@MainActivity)
         }
 
         // Build the viewfinder use case

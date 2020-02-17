@@ -26,7 +26,6 @@
         android:gravity="center"
         android:textSize="24sp"
         android:textColor="@color/colorLabel"
-        android:text="asdf"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginBottom="50dp"
@@ -40,15 +39,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
-
-<!--    <ImageView-->
-<!--        android:id="@+id/btnShoot"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        android:layout_marginBottom="30dp"-->
-<!--        android:src="@drawable/shoot" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
