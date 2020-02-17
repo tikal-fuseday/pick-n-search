@@ -1,6 +1,7 @@
 package com.tikal.pns
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -15,6 +16,7 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -45,6 +47,7 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
     private lateinit var btnShoot: ImageView
     private lateinit var reDetected: View
     private lateinit var tvDetectedLabel: TextView
+    private lateinit var button: Button
     private lateinit var service: ApiService
     private lateinit var storageRef: StorageReference
 
@@ -56,6 +59,7 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
         // Setup controls
         viewFinder = findViewById(R.id.tvViewFinder)
         reDetected = findViewById(R.id.reDetected)
+        button = findViewById(R.id.button)
         reDetected.visibility = View.INVISIBLE
         tvDetectedLabel = findViewById(R.id.tvDetectedLabel)
 
@@ -82,7 +86,12 @@ class MainActivity : AppCompatActivity(), LabelAnalysisListener {
         val storage = FirebaseStorage.getInstance()
 
         // Create a storage reference from our app
-         storageRef = storage.reference
+        storageRef = storage.reference
+
+        button.setOnClickListener {
+            val intent = Intent(this, WebViewActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     /**
