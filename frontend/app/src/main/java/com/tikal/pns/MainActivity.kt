@@ -5,19 +5,20 @@ import android.content.pm.PackageManager
 import android.graphics.Matrix
 import android.media.MediaActionSound
 import android.os.Bundle
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.Log
+import android.util.Rational
 import android.view.Surface
 import android.view.TextureView
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.AspectRatio
-import androidx.camera.core.CameraX
-import androidx.camera.core.Preview
-import androidx.camera.core.PreviewConfig
+import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.firebase.FirebaseApp
 import java.util.concurrent.Executors
 
 
@@ -35,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        FirebaseApp.initializeApp(this)
 
         // Setup controls
         viewFinder = findViewById(R.id.tvViewFinder)
@@ -47,13 +49,16 @@ class MainActivity : AppCompatActivity() {
 
         } else {
             ActivityCompat.requestPermissions(
-                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
+            )
         }
 
         // Every time the provided texture view changes, recompute layout
         viewFinder.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             updateTransform()
         }
+
+
     }
 
     /**
@@ -61,14 +66,17 @@ class MainActivity : AppCompatActivity() {
      * been granted? If yes, start Camera. Otherwise display a toast
      */
     override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        requestCode: Int, permissions: Array<String>, grantResults: IntArray
+    ) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
                 viewFinder.post { startCamera() }
             } else {
-                Toast.makeText(this,
+                Toast.makeText(
+                    this,
                     "Permissions not granted by the user.",
-                    Toast.LENGTH_SHORT).show()
+                    Toast.LENGTH_SHORT
+                ).show()
                 finish()
             }
         }
@@ -79,18 +87,35 @@ class MainActivity : AppCompatActivity() {
      */
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
-            baseContext, it) == PackageManager.PERMISSION_GRANTED
+            baseContext, it
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
+    /**
+     * Sets up the camera and the image analyzer.
+     */
     private fun startCamera() {
+        // Create configuration for image analyzer
+        val analyzerConfig = ImageAnalysisConfig.Builder().apply {
+            val analyzerThread = HandlerThread(
+                "LabelAnalysis"
+            ).apply { start() }
+            setCallbackHandler(Handler(analyzerThread.looper))
 
-        // Create configuration object for the viewfinder use case
-        val previewConfig = PreviewConfig.Builder()
-            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
-            .build()
+            setImageReaderMode(
+                ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE
+            )
+        }.build()
 
+        // Create MLKIT analysis use case
+        val analyzerUseCase = ImageAnalysis(analyzerConfig).apply {
+            analyzer = LabelAnalyzer()
+        }
 
         // Build the viewfinder use case
+        val previewConfig = PreviewConfig.Builder().apply {
+            setTargetAspectRatio(Rational(1,1))
+        }.build()
         val preview = Preview(previewConfig)
 
         // Every time the viewfinder is updated, recompute layout
@@ -105,11 +130,8 @@ class MainActivity : AppCompatActivity() {
             updateTransform()
         }
 
-        // Bind use cases to lifecycle
-        // If Android Studio complains about "this" being not a LifecycleOwner
-        // try rebuilding the project or updating the appcompat dependency to
-        // version 1.1.0 or higher.
-        CameraX.bindToLifecycle(this, preview)
+        // Bind use case to lifecycle
+        CameraX.bindToLifecycle(this, preview, analyzerUseCase)
     }
 
     private fun updateTransform() {
@@ -120,7 +142,7 @@ class MainActivity : AppCompatActivity() {
         val centerY = viewFinder.height / 2f
 
         // Correct preview output to account for display rotation
-        val rotationDegrees = when(viewFinder.display.rotation) {
+        val rotationDegrees = when (viewFinder.display.rotation) {
             Surface.ROTATION_0 -> 0
             Surface.ROTATION_90 -> 90
             Surface.ROTATION_180 -> 180
