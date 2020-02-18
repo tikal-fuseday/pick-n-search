@@ -192,3 +192,25 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
+
+# dependencies
+web_view/node_modules
+web_view/.pnp
+.pnp.js
+
+# testing
+web_view/coverage
+
+# production
+web_view/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+web_view/npm-debug.log*
+web_view/yarn-debug.log*
+web_view/yarn-error.log*
