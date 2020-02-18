@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "736486249429",
+    "firebase_url": "https://pick-n-search.firebaseio.com",
+    "project_id": "pick-n-search",
+    "storage_bucket": "pick-n-search.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:736486249429:android:a8fc19861674e133e8235c",
+        "android_client_info": {
+          "package_name": "com.google.firebase.samples.apps.mlkit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "736486249429-1bide3hcsfg2ud882l162fatfdi754g1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCc6Qge-A6R1T19M12l1M6Uub2mB0H6lVA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "736486249429-1bide3hcsfg2ud882l162fatfdi754g1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:736486249429:android:fe30c5dd2fa0a575e8235c",
+        "android_client_info": {
+          "package_name": "com.tikal.pns"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "736486249429-1bide3hcsfg2ud882l162fatfdi754g1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCc6Qge-A6R1T19M12l1M6Uub2mB0H6lVA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "736486249429-1bide3hcsfg2ud882l162fatfdi754g1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
